@@ -51,7 +51,7 @@ class Sp_table_select_ft extends EE_Fieldtype {
 	 */
 	public function replace_tag($data, $params = array(), $tagdata = FALSE) {
 		// Get the specific value
-		$label = $this->EE->db->select($this->settings['sp_table_select_label'] . ' AS `label`')
+		$label = $this->EE->db->select($this->settings['sp_table_select_label'] . ' AS `label`', TRUE)
 							  ->where($this->settings['sp_table_select_value'], $data)
 							  ->get($this->settings['sp_table_select_table'])
 							  ->row('label');
