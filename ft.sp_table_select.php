@@ -51,7 +51,7 @@ class Sp_table_select_ft extends EE_Fieldtype {
 	 */
 	public function replace_tag($data, $params = array(), $tagdata = FALSE) {
 		// Get the specific value
-		$label = $this->EE->db->select($this->settings['sp_table_select_label'] . ' AS `label`', TRUE)
+		$label = $this->EE->db->select($this->settings['sp_table_select_label'] . ' AS `label`')
 							  ->where($this->settings['sp_table_select_value'], $data)
 							  ->get($this->settings['sp_table_select_table'])
 							  ->row('label');
@@ -77,6 +77,7 @@ class Sp_table_select_ft extends EE_Fieldtype {
 		$tabs   = array();
 		$values = '';
 		$labels = '';
+		$init 	= FALSE;
 		
 		// Sensible defaults
 		$current_table = (isset($data['sp_table_select_table'])) ? $data['sp_table_select_table'] : '';
@@ -87,8 +88,11 @@ class Sp_table_select_ft extends EE_Fieldtype {
 		foreach ($tables as $name => $table) {
 			$tabs[$name] = $name;
 			
-			$values .= form_dropdown('sp_table_select_values['.$name.']', $table, $current_value, 'class="sp_table_selector" data-table="'.$name.'"');
-			$labels .= form_dropdown('sp_table_select_labels['.$name.']', $table, $current_label, 'class="sp_table_selector" data-table="'.$name.'"');
+			$values .= form_dropdown('sp_table_select_values['.$name.']', $table, $current_value, 
+									 'class="sp_table_selector' . ((!$init) ? ' initial' : '') . '" data-table="'.$name.'"');
+			$labels .= form_dropdown('sp_table_select_labels['.$name.']', $table, $current_label, 
+									 'class="sp_table_selector' . ((!$init) ? ' initial' : '') . '" data-table="'.$name.'"');
+			$init = TRUE;
 		}
 				
 		// Build up the settings array
@@ -109,6 +113,8 @@ class Sp_table_select_ft extends EE_Fieldtype {
 				$(".sp_table_selector").hide();
 				$(".sp_table_selector[data-table=\"" + $(this).val() + "\"]").show();
 			});
+			
+			$(".sp_table_selector:not(.initial)").hide();
 		');
 		
 		// Do we already have a table selected?
