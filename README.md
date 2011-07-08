@@ -8,6 +8,10 @@ Usage
 
 When you're adding a custom field, set the fieldtype to **SP Table Select**, give it a name and label, and scroll down to the fieldtype settings. Pick a table from the dropdown list and the value and label dropdowns will be automatically updated to reflect the new table. Pick a value column and a label column and create the field!
 
+If you'd rather not use the dropdowns, or have a more complex query to make, you can use a custom SQL query by entering a query into the query box. Use an SQL **SELECT AS** clause to select your desired value as `sp_table_value` and your desired label as `sp_table_label`. Here's a quick example that pulls the ID and title from a WordPress database:
+
+	SELECT id AS sp_table_value, post_title AS sp_table_label FROM wp_posts ORDER BY post_date DESC
+
 Now, when you view the field on the publish page you'll see the dropdown populated from the datasource. It's that easy!
 
 Template Tags

@@ -83,6 +83,7 @@ class Sp_table_select_ft extends EE_Fieldtype {
 		$current_table = (isset($data['sp_table_select_table'])) ? $data['sp_table_select_table'] : '';
 		$current_value = (isset($data['sp_table_select_value'])) ? $data['sp_table_select_value'] : '';
 		$current_label = (isset($data['sp_table_select_label'])) ? $data['sp_table_select_label'] : '';
+		$current_sql   = (isset($data['sp_table_select_custom_query'])) ? $data['sp_table_select_custom_query'] : '';
 		
 		// Build up two dropdowns for each table
 		foreach ($tables as $name => $table) {
@@ -99,7 +100,9 @@ class Sp_table_select_ft extends EE_Fieldtype {
 		$settings = array(
 			array("Data source's table name <small>(exp_categories, for instance)</small>", form_dropdown('sp_table_select_table', $tabs, $current_table, 'id="sp_table_selector_switch"')),
 			array("Column name to use as value <small>(cat_id, for instance)</small>", $values),
-			array("Column name to use as label <small>(cat_name, for instance)</small>", $labels)
+			array("Column name to use as label <small>(cat_name, for instance)</small>", $labels),
+			array(array('data' => "<strong><em>or...</em></strong>", 'colspan' => 2), null),
+			array("Use a custom SQL query <small>(use SELECT AS to get a <i>sp_table_value</i> and <i>sp_table_label</i>)</small>", form_textarea('sp_table_select_custom_query', $current_sql))
 		);
 		
 		// Loop through and add the table row
@@ -133,7 +136,8 @@ class Sp_table_select_ft extends EE_Fieldtype {
 	 */
 	public function save_settings($data) {
 		$settings = array(
-			'sp_table_select_table' => (isset($data['sp_table_select_table'])) ? $data['sp_table_select_table'] : $_POST['sp_table_select_table']
+			'sp_table_select_table' => (isset($data['sp_table_select_table'])) ? $data['sp_table_select_table'] : $_POST['sp_table_select_table'],
+			'sp_table_select_custom_query' => (isset($data['sp_table_select_custom_query'])) ? $data['sp_table_select_custom_query'] : $_POST['sp_table_select_custom_query']
 		);
 		
 		return $settings + array(
@@ -156,18 +160,30 @@ class Sp_table_select_ft extends EE_Fieldtype {
 	 * Get the dropdown options
 	 */
 	protected function _get_options() {
-		// Get the data from the database
-		$result = $this->EE->db->select($this->settings['sp_table_select_value'] . ' AS `value`', TRUE)
-							   ->select($this->settings['sp_table_select_label'] . ' AS `label`', TRUE)
-							   ->get($this->settings['sp_table_select_table'])
-							   ->result();
+		// Do we have a custom SQL query?
+		if (isset($this->settings['sp_table_select_custom_query']) && $this->settings['sp_table_select_custom_query']) {
+			$result = $this->EE->db->query($this->settings['sp_table_select_custom_query']);
+			
+			// Ensure the query is formatted correctly.
+			if (isset($result->row()->sp_table_value) && isset($result->row()->sp_table_label)) {
+				$result = $result->result();
+			} else {
+				show_error('Your custom SP Table Select query is formatted incorrectly. We can\'t find a sp_table_value and/or sp_table_label value. Please fix in the field settings.');
+			}
+		} else {
+			// Get the data from the database
+			$result = $this->EE->db->select($this->settings['sp_table_select_value'] . ' AS `sp_table_value`', TRUE)
+								   ->select($this->settings['sp_table_select_label'] . ' AS `sp_table_label`', TRUE)
+								   ->get($this->settings['sp_table_select_table'])
+								   ->result();
+		}
 		
 		$dropdown = array('' => '---');
 		
 		// Loop through and build up a dropdown safe
 		// array of options
 		foreach ($result as $row) {
-			$dropdown[$row->value] = $row->label;
+			$dropdown[$row->sp_table_value] = $row->sp_table_label;
 		}
 		
 		// Return them
