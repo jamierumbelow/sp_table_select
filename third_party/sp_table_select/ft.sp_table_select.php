@@ -6,7 +6,7 @@
  * table in your database
  *
  * @author 		Jamie Rumbelow
- * @version 	1.0.0
+ * @version 	1.1.0
  * @copyright 	Copyright (c) 2011 Jamie Rumbelow
  **/
 
