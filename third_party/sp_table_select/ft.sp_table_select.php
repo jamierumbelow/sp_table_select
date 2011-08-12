@@ -6,7 +6,7 @@
  * table in your database
  *
  * @author 		Jamie Rumbelow
- * @version 	1.1.0
+ * @version 	1.2.0
  * @copyright 	Copyright (c) 2011 Jamie Rumbelow
  **/
 
@@ -18,7 +18,7 @@ class Sp_table_select_ft extends EE_Fieldtype {
 	
 	public $info = array(
 		'name' 			=> 'SP Table Select',
-		'version'		=> '1.0.0',
+		'version'		=> '1.2.0',
 		'description'	=> 'Populate a dropdown with the contents of any table in your database'
 	);
 	public $data = array();

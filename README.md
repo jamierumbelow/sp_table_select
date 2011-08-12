@@ -19,6 +19,11 @@ Template Tags
 
 The `{custom_field}` template tag returns the label, and the `{custom_field:value}` returns the value.
 
+Matrix Support
+-------------
+
+SP Table Select fully supports the excellent [Pixel and Tonic Matrix](http://pixelandtonic.com/matrix/) add-on. Just add a SP Table Select field to your Matrix and you're good to go!
+
 More
 ----
 
