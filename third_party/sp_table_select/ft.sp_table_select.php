@@ -43,7 +43,7 @@ class Sp_table_select_ft extends EE_Fieldtype {
 	 * Display the dropdown
 	 */
 	public function display_field($data) {
-		return form_dropdown($this->field_name, $this->_get_options(), $data);
+		return form_dropdown((isset($this->cell_name) ? $this->cell_name : $this->field_name), $this->_get_options(), $data);
 	}
 	
 	/**
@@ -71,7 +71,7 @@ class Sp_table_select_ft extends EE_Fieldtype {
 	/**
 	 * Display the fieldtype settings
 	 */
-	public function display_settings($data) {
+	public function display_settings($data, $matrix = FALSE) {
 		// Get a list of the tables & fields
 		$tables = $this->_get_all_tables_and_fields();
 		$tabs   = array();
@@ -98,27 +98,45 @@ class Sp_table_select_ft extends EE_Fieldtype {
 				
 		// Build up the settings array
 		$settings = array(
-			array("Data source's table name <small>(exp_categories, for instance)</small>", form_dropdown('sp_table_select_table', $tabs, $current_table, 'id="sp_table_selector_switch"')),
+			array("Data source's table name <small>(exp_categories, for instance)</small>", form_dropdown('sp_table_select_table', $tabs, $current_table, 'class="sp_table_selector_switch' . (($matrix) ? ' sp_table_selector_matrix' : '') . '"')),
 			array("Column name to use as value <small>(cat_id, for instance)</small>", $values),
 			array("Column name to use as label <small>(cat_name, for instance)</small>", $labels),
 			array(array('data' => "<strong><em>or...</em></strong>", 'colspan' => 2), null),
 			array("Use a custom SQL query <small>(use SELECT AS to get a <i>sp_table_value</i> and <i>sp_table_label</i>)</small>", form_textarea('sp_table_select_custom_query', $current_sql))
 		);
 		
-		// Loop through and add the table row
-		foreach ($settings as $setting) {
-			$this->EE->table->add_row($setting[0], $setting[1]);
+		// If we're displaying it, loop through and add the table row
+		if (!$matrix) {
+			foreach ($settings as $setting) {
+				$this->EE->table->add_row($setting[0], $setting[1]);
+			}
 		}
 		
 		// Output the JS
 		$this->EE->javascript->output('
-			$("#sp_table_selector_switch").change(function(){
-				$(".sp_table_selector").hide();
-				$(".sp_table_selector[data-table=\"" + $(this).val() + "\"]").show();
+			$(".sp_table_selector_switch").live("change", function(){
+				if ($(this).hasClass("sp_table_selector_matrix")) {
+					$(this).parents(".matrix-col-settings").find(".sp_table_selector").hide();
+					$(this).parents(".matrix-col-settings").find(".sp_table_selector[data-table=\"" + $(this).val() + "\"]").show();
+				} else {
+					$(this).parents("#ft_sp_table_select").find(".sp_table_selector").hide();
+					$(this).parents("#ft_sp_table_select").find(".sp_table_selector[data-table=\"" + $(this).val() + "\"]").show();
+				}
 			});
 			
 			$(".sp_table_selector:not(.initial)").hide();
 		');
+		
+		// Output some Matrix-specific JS if we need to
+		if ($matrix) {
+			$this->EE->javascript->output('
+				$(".matrix-conf tbody tr:first td select").live("change", function(){
+					if ($(this).val() == "sp_table_select") {
+						$(".sp_table_selector:not(.initial)").hide();
+					}
+				});
+			');
+		}
 		
 		// Do we already have a table selected?
 		if ($current_table) {
@@ -126,6 +144,11 @@ class Sp_table_select_ft extends EE_Fieldtype {
 				$(".sp_table_selector").hide();
 				$(".sp_table_selector[data-table=\"' . $current_table . '\"]").show();
 			');
+		}
+		
+		// Right. We're in Matrix, so return this bad-boy
+		if ($matrix) {
+			return $settings;
 		}
 	}
 	
@@ -150,6 +173,43 @@ class Sp_table_select_ft extends EE_Fieldtype {
 					$data['sp_table_select_labels'][$settings['sp_table_select_table']] 
 					: $_POST['sp_table_select_labels'][$settings['sp_table_select_table']]
 		);
+	}
+	
+	/* --------------------------------------------------------------
+	 * MATRIX COMPATIBILITY
+	 * ------------------------------------------------------------ */
+	
+	/**
+	 * Display a Matrix cell
+	 */
+	public function display_cell($data) {
+		return $this->display_field($data);
+	}
+	
+	/**
+	 * Display the cell settings. Matrix is a little funky
+	 * with displaying custom table stuff so we have to change
+	 * some stuff over before we hand it to Brandon.
+	 */
+	public function display_cell_settings($settings) {
+		$settings = $this->display_settings($settings, TRUE);
+		$new_settings = array();
+		
+		// Loop through and remove the inner arrays
+		foreach ($settings as $key => $setting) {
+			if (is_array($setting[0])) {
+				$settings[$key][0] = $setting[0]['data'];
+			}
+		}
+		
+		return $settings;
+	}
+	
+	/**
+	 * Save a cell's settings
+	 */
+	public function save_cell_settings($data) {
+		return $this->save_settings($data);
 	}
 	
 	/* --------------------------------------------------------------
